@@ -1,0 +1,16 @@
+[package]
+name = "weakauras_parser"
+version = "0.1.0"
+authors = ["Velithris"]
+edition = "2018"
+license = "MIT"
+
+[dependencies]
+flate2 = { version = "1.0.19", features = ["zlib-ng-compat"] }
+
+itoa = "0.4.6"
+ryu = "1.0.5"
+
+serde = { version = "1", optional = true }
+indexmap = { version = "1", optional = true }
+fnv = { version = "1", optional = true }
