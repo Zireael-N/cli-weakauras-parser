@@ -1,0 +1,178 @@
+# Based on https://github.com/BurntSushi/ripgrep/blob/ffd4c9ccba0ffc74270a8d3ae75f11a7ba7a1a64/.github/workflows/release.yml
+
+name: release
+on:
+  push:
+    tags:
+    - 'v[0-9]+.[0-9]+.[0-9]+'
+jobs:
+  create-release:
+    name: create-release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create a directory for artifacts
+        run: mkdir artifacts
+
+      - name: Get the release version from the tag
+        run: |
+          echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
+          echo "version is: ${{ env.VERSION }}"
+
+      - name: Create a GitHub release
+        id: release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ env.VERSION }}
+          release_name: ${{ env.VERSION }}
+
+      - name: Save the release upload URL to an artifact
+        run: echo "${{ steps.release.outputs.upload_url }}" > artifacts/release-upload-url
+
+      - name: Save the version number to an artifact
+        shell: bash
+        run: echo "${{ env.VERSION }}" | sed "s/^v//" > artifacts/release-version
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v1
+        with:
+          name: artifacts
+          path: artifacts
+
+  build-release:
+    name: build-release
+    needs: ['create-release']
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        build: [linux, linux-musl, macos, win-msvc, win-gnu, win32-msvc, win32-gnu]
+        include:
+        - build: linux
+          os: ubuntu-20.04
+          rust: stable
+          target: x86_64-unknown-linux-gnu
+        - build: linux-musl
+          os: ubuntu-20.04
+          target: x86_64-unknown-linux-musl
+        - build: macos
+          os: macos-latest
+          rust: stable
+          target: x86_64-apple-darwin
+        - build: win-msvc
+          os: windows-2019
+          rust: stable
+          target: x86_64-pc-windows-msvc
+        - build: win-gnu
+          os: windows-2019
+          rust: stable
+          target: x86_64-pc-windows-gnu
+        - build: win32-msvc
+          os: windows-2019
+          rust: stable
+          target: i686-pc-windows-msvc
+        - build: win32-gnu
+          os: windows-2019
+          rust: stable
+          target: i686-pc-windows-gnu
+
+    steps:
+    - name: Checkout the repository
+      uses: actions/checkout@v2
+      with:
+        fetch-depth: 1
+
+    - name: Install Rust
+      if: matrix.build != 'linux-musl'
+      uses: actions-rs/toolchain@v1
+      with:
+        toolchain: ${{ matrix.rust }}
+        profile: minimal
+        override: true
+        target: ${{ matrix.target }}
+
+    - name: Build a Docker image
+      if: matrix.build == 'linux-musl'
+      shell: bash
+      run: |
+        docker build -t alpine-builder -f .github/workflows/Dockerfile .
+
+    - name: Get the release download URL
+      uses: actions/download-artifact@v1
+      with:
+        name: artifacts
+        path: artifacts
+
+    - name: Set the release upload URL and release version
+      shell: bash
+      run: |
+        release_upload_url="$(cat artifacts/release-upload-url)"
+        echo "RELEASE_UPLOAD_URL=$release_upload_url" >> $GITHUB_ENV
+        echo "release upload url: $release_upload_url"
+        release_version="$(cat artifacts/release-version)"
+        echo "RELEASE_VERSION=$release_version" >> $GITHUB_ENV
+        echo "release version: $release_version"
+
+    - name: Build the release binary
+      if: matrix.build != 'linux-musl'
+      run: cargo build --verbose --release
+
+    - name: Build the release binary (Docker)
+      if: matrix.build == 'linux-musl'
+      run: |
+        user=$(whoami)
+        uid=$(id -u $user)
+        gid=$(id -g $user)
+
+        docker run --rm \
+          -v "$PWD:/app:Z" \
+          --workdir="/app" \
+          alpine-builder \
+          cargo build --verbose --release
+
+        docker run --rm \
+          -v "$PWD:/app:Z" \
+          --workdir="/app" \
+          alpine-builder \
+          chown -R $uid:$gid target/
+
+    - name: Strip the release binary
+      if: matrix.build == 'linux' || matrix.build == 'linux-musl' || matrix.build == 'macos'
+      run: |
+        strip "target/release/cli_weakauras_parser"
+
+    - name: Build an archive and print its SHA256
+      shell: bash
+      run: |
+        release="cli_weakauras_parser-${{ env.RELEASE_VERSION }}-${{ matrix.target }}"
+        mkdir -p "$release"
+        if [ "${{ matrix.os }}" = "windows-2019" ]; then
+          cp "target/release/cli_weakauras_parser.exe" "$release/"
+
+          asset="$release.zip"
+          7z a "$asset" "$release"
+          echo "ASSET=$asset" >> $GITHUB_ENV
+        else
+          cp "target/release/cli_weakauras_parser" "$release/"
+
+          asset="$release.tar.gz"
+          tar czf "$asset" "$release"
+          echo "ASSET=$asset" >> $GITHUB_ENV
+        fi
+
+        if which sha256sum; then
+          SHA256="$(sha256sum $asset | awk '{ print $1 }')"
+        elif which shasum; then # macOS
+          SHA256="$(shasum -a 256 $asset | awk '{ print $1 }')"
+        fi
+        echo "SHA256 of $asset: ${SHA256:-N/A (sha256sum is not installed)}"
+
+    - name: Upload the archive
+      uses: actions/upload-release-asset@v1.0.1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ env.RELEASE_UPLOAD_URL }}
+        asset_path: ${{ env.ASSET }}
+        asset_name: ${{ env.ASSET }}
+        asset_content_type: application/octet-stream
