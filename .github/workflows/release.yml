@@ -144,15 +144,15 @@ jobs:
         if [ "${{ matrix.os }}" = "windows-latest" ]; then
           cp "target/release/cli_weakauras_parser.exe" "$OUTPUT_DIR/"
 
-          ASSET="$release.zip"
+          ASSET="$OUTPUT_DIR.zip"
           7z a "$ASSET" "$OUTPUT_DIR"
-          echo "ASSET=$ASSET" >> $GITHUB_ENV
+          echo "ASSET=$ASSET" | tee -a $GITHUB_ENV
         else
           cp "target/release/cli_weakauras_parser" "$OUTPUT_DIR/"
 
-          ASSET="$release.tar.gz"
+          ASSET="$OUTPUT_DIR.tar.gz"
           tar czf "$ASSET" "$OUTPUT_DIR"
-          echo "ASSET=$ASSET" >> $GITHUB_ENV
+          echo "ASSET=$ASSET" | tee -a $GITHUB_ENV
         fi
 
         if command -v sha512sum; then
