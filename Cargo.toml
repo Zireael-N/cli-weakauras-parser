@@ -1,17 +1,10 @@
-[package]
-name = "cli_weakauras_parser"
-version = "0.1.0"
-authors = ["Velithris"]
-edition = "2018"
-license = "MIT"
-
 [profile.release]
 lto = true
 
-[dependencies]
-clap = "2"
-weakauras_parser = { path = "./parser", features = ["serde", "indexmap"] }
-serde_json = "1"
-
-[target.'cfg(all(target_env = "musl", target_pointer_width = "64"))'.dependencies.jemallocator]
-version = "0.3.0"
+[workspace]
+members = [
+    "base64",
+    "cli",
+    "core",
+    "huffman"
+]
