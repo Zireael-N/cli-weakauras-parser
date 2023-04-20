@@ -13,7 +13,7 @@ use utils::{get_code, unescape_code};
 
 const GENERIC_ERROR: &str = "Decompression error";
 
-pub fn decompress<'a>(bytes: &'a [u8]) -> Result<Cow<'a, [u8]>, &'static str> {
+pub fn decompress(bytes: &[u8]) -> Result<Cow<'_, [u8]>, &'static str> {
     let mut iter = bytes.iter();
     match iter.next() {
         Some(1) => return Ok(Cow::from(&bytes[1..])),

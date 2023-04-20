@@ -51,10 +51,8 @@ pub static ENCODE_LUT: ByteMap<u8> = ByteMap([
     b'W', b'X', b'Y', b'Z', b'0', b'1', b'2', b'3', b'4', b'5', b'6', b'7', b'8', b'9', b'(', b')',
 ]);
 
-#[cfg_attr(feature = "cargo-clippy", allow(clippy::unreadable_literal))]
 pub const BAD_SYMBOL: u32 = 0xffffffff;
 
-#[cfg_attr(feature = "cargo-clippy", allow(clippy::unreadable_literal))]
 pub static DECODE_LUT0: ByteMap<u32> = ByteMap([
     BAD_SYMBOL, BAD_SYMBOL, BAD_SYMBOL, BAD_SYMBOL, BAD_SYMBOL, BAD_SYMBOL, BAD_SYMBOL, BAD_SYMBOL,
     BAD_SYMBOL, BAD_SYMBOL, BAD_SYMBOL, BAD_SYMBOL, BAD_SYMBOL, BAD_SYMBOL, BAD_SYMBOL, BAD_SYMBOL,
@@ -90,7 +88,6 @@ pub static DECODE_LUT0: ByteMap<u32> = ByteMap([
     BAD_SYMBOL, BAD_SYMBOL, BAD_SYMBOL, BAD_SYMBOL, BAD_SYMBOL, BAD_SYMBOL, BAD_SYMBOL, BAD_SYMBOL,
 ]);
 
-#[cfg_attr(feature = "cargo-clippy", allow(clippy::unreadable_literal))]
 pub static DECODE_LUT1: ByteMap<u32> = ByteMap([
     BAD_SYMBOL, BAD_SYMBOL, BAD_SYMBOL, BAD_SYMBOL, BAD_SYMBOL, BAD_SYMBOL, BAD_SYMBOL, BAD_SYMBOL,
     BAD_SYMBOL, BAD_SYMBOL, BAD_SYMBOL, BAD_SYMBOL, BAD_SYMBOL, BAD_SYMBOL, BAD_SYMBOL, BAD_SYMBOL,
@@ -126,7 +123,6 @@ pub static DECODE_LUT1: ByteMap<u32> = ByteMap([
     BAD_SYMBOL, BAD_SYMBOL, BAD_SYMBOL, BAD_SYMBOL, BAD_SYMBOL, BAD_SYMBOL, BAD_SYMBOL, BAD_SYMBOL,
 ]);
 
-#[cfg_attr(feature = "cargo-clippy", allow(clippy::unreadable_literal))]
 pub static DECODE_LUT2: ByteMap<u32> = ByteMap([
     BAD_SYMBOL, BAD_SYMBOL, BAD_SYMBOL, BAD_SYMBOL, BAD_SYMBOL, BAD_SYMBOL, BAD_SYMBOL, BAD_SYMBOL,
     BAD_SYMBOL, BAD_SYMBOL, BAD_SYMBOL, BAD_SYMBOL, BAD_SYMBOL, BAD_SYMBOL, BAD_SYMBOL, BAD_SYMBOL,
@@ -162,7 +158,6 @@ pub static DECODE_LUT2: ByteMap<u32> = ByteMap([
     BAD_SYMBOL, BAD_SYMBOL, BAD_SYMBOL, BAD_SYMBOL, BAD_SYMBOL, BAD_SYMBOL, BAD_SYMBOL, BAD_SYMBOL,
 ]);
 
-#[cfg_attr(feature = "cargo-clippy", allow(clippy::unreadable_literal))]
 pub static DECODE_LUT3: ByteMap<u32> = ByteMap([
     BAD_SYMBOL, BAD_SYMBOL, BAD_SYMBOL, BAD_SYMBOL, BAD_SYMBOL, BAD_SYMBOL, BAD_SYMBOL, BAD_SYMBOL,
     BAD_SYMBOL, BAD_SYMBOL, BAD_SYMBOL, BAD_SYMBOL, BAD_SYMBOL, BAD_SYMBOL, BAD_SYMBOL, BAD_SYMBOL,

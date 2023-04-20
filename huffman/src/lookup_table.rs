@@ -13,7 +13,7 @@ pub(crate) enum TableData {
 }
 
 // https://doc.rust-lang.org/core/slice/struct.Iter.html#method.is_sorted_by
-// is Nightly-only as of Rust 1.61.0.
+// is Nightly-only as of Rust 1.69.0 (https://github.com/rust-lang/rust/issues/53485).
 use std::cmp::Ordering;
 #[cfg_attr(not(debug_assertions), allow(dead_code))]
 fn is_sorted<T, F>(slice: &[T], comparator: F) -> bool

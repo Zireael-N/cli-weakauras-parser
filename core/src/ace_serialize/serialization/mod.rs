@@ -1,6 +1,5 @@
 use crate::{macros::check_recursion, value::LuaValue};
 
-#[cfg_attr(feature = "cargo-clippy", allow(clippy::unreadable_literal))]
 fn f64_to_parts(v: f64) -> (u64, i16, i8) {
     let bits = v.to_bits();
     let sign: i8 = if bits >> 63 == 0 { 1 } else { -1 };
@@ -81,7 +80,6 @@ impl Serializer {
         Ok(())
     }
 
-    #[cfg_attr(feature = "cargo-clippy", allow(clippy::float_cmp))]
     fn serialize_number(&mut self, value: f64) -> Result<(), &'static str> {
         if value.is_nan() {
             return Err("AceSerializer does not support NaNs");

@@ -161,8 +161,8 @@ impl LuaMapKey {
             LuaValue::String(ref v) => Cow::from(v),
             LuaValue::Number(v) => Cow::from(v.to_string()),
             LuaValue::Boolean(v) => Cow::from(v.to_string()),
-            LuaValue::Map(ref m) => Cow::from(format!("map at {:p}", m)),
-            LuaValue::Array(ref m) => Cow::from(format!("array at {:p}", m)),
+            LuaValue::Map(ref m) => Cow::from(format!("map at {m:p}")),
+            LuaValue::Array(ref m) => Cow::from(format!("array at {m:p}")),
             LuaValue::Null => unsafe { core::hint::unreachable_unchecked() },
         }
     }

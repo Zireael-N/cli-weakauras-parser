@@ -55,7 +55,6 @@ impl<'s> Deserializer<'s> {
         self.deserialize_helper()
     }
 
-    #[cfg_attr(feature = "cargo-clippy", allow(clippy::float_cmp))]
     fn deserialize_helper(&mut self) -> Result<Option<LuaValue>, &'static str> {
         Ok(Some(match self.reader.read_identifier()? {
             "^^" => return Ok(None),
