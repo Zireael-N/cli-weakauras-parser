@@ -10,7 +10,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        build: [linux, macos, win-msvc, win-gnu]
+        build: [linux, macos, win-msvc]
         include:
         - build: linux
           os: ubuntu-latest
@@ -21,15 +21,10 @@ jobs:
         - build: win-msvc
           os: windows-latest
           target: x86_64-pc-windows-msvc
-        - build: win-gnu
-          os: windows-latest
-          target: x86_64-pc-windows-gnu
 
     steps:
     - name: Checkout the repository
-      uses: actions/checkout@v2
-      with:
-        fetch-depth: 1
+      uses: actions/checkout@v3
 
     - name: Install Rust
       uses: actions-rs/toolchain@v1
@@ -48,9 +43,7 @@ jobs:
 
     steps:
     - name: Checkout the repository
-      uses: actions/checkout@v2
-      with:
-        fetch-depth: 1
+      uses: actions/checkout@v3
 
     - name: Install Rust
       uses: actions-rs/toolchain@v1
@@ -58,7 +51,7 @@ jobs:
         toolchain: stable
         profile: minimal
         override: true
-        target: x86_64-unknown-linux-musl
+        target: x86_64-unknown-linux-gnu
 
     - name: Check formatting
       run: cargo fmt --all -- --check

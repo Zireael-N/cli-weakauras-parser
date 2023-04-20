@@ -9,10 +9,10 @@ jobs:
   create-release:
     name: create-release
     runs-on: ubuntu-latest
+    outputs:
+      upload_url: ${{ steps.release.outputs.upload_url }}
+      version: ${{ env.VERSION }}
     steps:
-      - name: Create a directory for artifacts
-        run: mkdir artifacts
-
       - name: Get the release version from the tag
         run: |
           echo "VERSION=${GITHUB_REF#refs/tags/}" | tee -a $GITHUB_ENV
@@ -26,26 +26,13 @@ jobs:
           tag_name: ${{ env.VERSION }}
           release_name: ${{ env.VERSION }}
 
-      - name: Save the release upload URL to an artifact
-        run: echo "${{ steps.release.outputs.upload_url }}" > artifacts/release-upload-url
-
-      - name: Save the version number to an artifact
-        shell: bash
-        run: echo "${{ env.VERSION }}" | sed "s/^v//" > artifacts/release-version
-
-      - name: Upload artifacts
-        uses: actions/upload-artifact@v1
-        with:
-          name: artifacts
-          path: artifacts
-
   build-release:
     name: build-release
     needs: ['create-release']
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        build: [linux, linux-musl, macos, win-msvc, win-gnu, win32-msvc, win32-gnu]
+        build: [linux, linux-musl, macos, win-msvc, win32-msvc]
         include:
         - build: linux
           os: ubuntu-latest
@@ -62,18 +49,10 @@ jobs:
           os: windows-latest
           rust: stable
           target: x86_64-pc-windows-msvc
-        - build: win-gnu
-          os: windows-latest
-          rust: stable
-          target: x86_64-pc-windows-gnu
         - build: win32-msvc
           os: windows-latest
           rust: stable
           target: i686-pc-windows-msvc
-        - build: win32-gnu
-          os: windows-latest
-          rust: stable
-          target: i686-pc-windows-gnu
 
     steps:
     - name: Checkout the repository
@@ -95,18 +74,6 @@ jobs:
       shell: bash
       run: |
         docker build -t alpine-builder -f .github/workflows/Dockerfile .
-
-    - name: Get the release download URL
-      uses: actions/download-artifact@v1
-      with:
-        name: artifacts
-        path: artifacts
-
-    - name: Set the release upload URL and release version
-      shell: bash
-      run: |
-        echo "RELEASE_UPLOAD_URL=$(cat artifacts/release-upload-url)" | tee -a $GITHUB_ENV
-        echo "RELEASE_VERSION=$(cat artifacts/release-version)" | tee -a $GITHUB_ENV
 
     - name: Build the release binary
       if: matrix.build != 'linux-musl'
@@ -131,15 +98,10 @@ jobs:
           alpine-builder \
           chown -R $USER_ID:$GROUP_ID target/
 
-    - name: Strip the release binary
-      if: matrix.build == 'linux' || matrix.build == 'linux-musl' || matrix.build == 'macos'
-      run: |
-        strip "target/release/cli_weakauras_parser"
-
     - name: Build an archive and print its SHA-512
       shell: bash
       run: |
-        OUTPUT_DIR="cli_weakauras_parser-${{ env.RELEASE_VERSION }}-${{ matrix.target }}"
+        OUTPUT_DIR="cli_weakauras_parser-${{ needs.create-release.outputs.version }}-${{ matrix.target }}"
         mkdir -p "$OUTPUT_DIR"
         if [ "${{ matrix.os }}" = "windows-latest" ]; then
           cp "target/release/cli_weakauras_parser.exe" "$OUTPUT_DIR/"
@@ -169,7 +131,7 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        upload_url: ${{ env.RELEASE_UPLOAD_URL }}
+        upload_url: ${{ needs.create-release.outputs.upload_url }}
         asset_path: ${{ env.ASSET }}
         asset_name: ${{ env.ASSET }}
         asset_content_type: application/octet-stream

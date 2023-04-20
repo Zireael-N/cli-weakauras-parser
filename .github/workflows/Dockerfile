@@ -1,4 +1,4 @@
-FROM alpine:3.16.0
+FROM alpine:3.17
 ENV RUSTUP_HOME=/usr/local/rustup \
     CARGO_HOME=/usr/local/cargo \
     PATH=/usr/local/cargo/bin:$PATH
