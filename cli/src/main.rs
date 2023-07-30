@@ -12,8 +12,8 @@ type Error = Box<dyn std::error::Error + Send + Sync + 'static>;
 
 fn try_main() -> Result<(), Error> {
     let matches = Command::new("cli_weakauras_parser")
-        .version("0.1.2")
-        .author("Velithris")
+        .version(env!("CARGO_PKG_VERSION"))
+        .author(env!("CARGO_PKG_AUTHORS"))
         .about("Converts WA-compatible strings to JSON and vice versa")
         .subcommand_required(true)
         .arg_required_else_help(true)
