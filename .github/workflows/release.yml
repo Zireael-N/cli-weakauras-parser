@@ -77,7 +77,7 @@ jobs:
 
     - name: Build the release binary
       if: matrix.build != 'linux-musl'
-      run: cargo build --verbose --release
+      run: cargo build --verbose --release --target ${{ matrix.target }}
 
     - name: Build the release binary (Docker)
       if: matrix.build == 'linux-musl'
@@ -90,7 +90,7 @@ jobs:
           -v "$PWD:/app:Z" \
           --workdir="/app" \
           alpine-builder \
-          cargo build --verbose --release
+          cargo build --verbose --release --target ${{ matrix.target }}
 
         docker run --rm \
           -v "$PWD:/app:Z" \
@@ -104,13 +104,13 @@ jobs:
         OUTPUT_DIR="cli_weakauras_parser-${{ needs.create-release.outputs.version }}-${{ matrix.target }}"
         mkdir -p "$OUTPUT_DIR"
         if [ "${{ matrix.os }}" = "windows-latest" ]; then
-          cp "target/release/cli_weakauras_parser.exe" "$OUTPUT_DIR/"
+          cp "target/${{ matrix.target }}/release/cli_weakauras_parser.exe" "$OUTPUT_DIR/"
 
           ASSET="$OUTPUT_DIR.zip"
           7z a "$ASSET" "$OUTPUT_DIR"
           echo "ASSET=$ASSET" | tee -a $GITHUB_ENV
         else
-          cp "target/release/cli_weakauras_parser" "$OUTPUT_DIR/"
+          cp "target/${{ matrix.target }}/release/cli_weakauras_parser" "$OUTPUT_DIR/"
 
           ASSET="$OUTPUT_DIR.tar.gz"
           tar czf "$ASSET" "$OUTPUT_DIR"
