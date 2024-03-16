@@ -120,7 +120,7 @@ impl<'s> Deserializer<'s> {
                 if is_array {
                     LuaValue::Array(values)
                 } else {
-                    LuaValue::Map(keys.into_iter().zip(values.into_iter()).collect())
+                    LuaValue::Map(keys.into_iter().zip(values).collect())
                 }
             }
             _ => return Err("Invalid identifier"),

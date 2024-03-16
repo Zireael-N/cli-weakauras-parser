@@ -107,14 +107,13 @@ impl<'s> Deserializer<'s> {
         len: u8,
     ) -> Result<LuaValue, &'static str> {
         match tag {
-            EmbeddedTypeTag::Str => self.deserialize_string(len.try_into().unwrap()),
-            EmbeddedTypeTag::Map => self.deserialize_map(len.try_into().unwrap()),
-            EmbeddedTypeTag::Array => self.deserialize_array(len.try_into().unwrap()),
+            EmbeddedTypeTag::Str => self.deserialize_string(len.into()),
+            EmbeddedTypeTag::Map => self.deserialize_map(len.into()),
+            EmbeddedTypeTag::Array => self.deserialize_array(len.into()),
             // For MIXED, the 4-bit count contains two 2-bit counts that are one less than the true count.
-            EmbeddedTypeTag::Mixed => self.deserialize_mixed(
-                ((len & 3) + 1).try_into().unwrap(),
-                ((len >> 2) + 1).try_into().unwrap(),
-            ),
+            EmbeddedTypeTag::Mixed => {
+                self.deserialize_mixed(((len & 3) + 1).into(), ((len >> 2) + 1).into())
+            }
         }
     }
 
@@ -150,7 +149,7 @@ impl<'s> Deserializer<'s> {
 
             TypeTag::Str8 => {
                 let len = self.reader.read_u8().ok_or("Unexpected EOF")?;
-                self.deserialize_string(len.try_into().unwrap())
+                self.deserialize_string(len.into())
             }
             TypeTag::Str16 => {
                 let len = self.deserialize_int(2)?;
@@ -163,7 +162,7 @@ impl<'s> Deserializer<'s> {
 
             TypeTag::Map8 => {
                 let len = self.reader.read_u8().ok_or("Unexpected EOF")?;
-                self.deserialize_map(len.try_into().unwrap())
+                self.deserialize_map(len.into())
             }
             TypeTag::Map16 => {
                 let len = self.deserialize_int(2)?;
@@ -176,7 +175,7 @@ impl<'s> Deserializer<'s> {
 
             TypeTag::Array8 => {
                 let len = self.reader.read_u8().ok_or("Unexpected EOF")?;
-                self.deserialize_array(len.try_into().unwrap())
+                self.deserialize_array(len.into())
             }
             TypeTag::Array16 => {
                 let len = self.deserialize_int(2)?;
@@ -191,7 +190,7 @@ impl<'s> Deserializer<'s> {
                 let array_len = self.reader.read_u8().ok_or("Unexpected EOF")?;
                 let map_len = self.reader.read_u8().ok_or("Unexpected EOF")?;
 
-                self.deserialize_mixed(array_len.try_into().unwrap(), map_len.try_into().unwrap())
+                self.deserialize_mixed(array_len.into(), map_len.into())
             }
             TypeTag::Mixed16 => {
                 let array_len = self.deserialize_int(2)?;
@@ -208,7 +207,7 @@ impl<'s> Deserializer<'s> {
 
             TypeTag::StrRef8 => {
                 let index = self.reader.read_u8().ok_or("Unexpected EOF")? - 1;
-                match self.string_refs.get(usize::try_from(index).unwrap()) {
+                match self.string_refs.get(usize::from(index)) {
                     None => Err("Invalid string reference"),
                     Some(s) => Ok(LuaValue::String(s.clone())),
                 }
@@ -230,7 +229,7 @@ impl<'s> Deserializer<'s> {
 
             TypeTag::MapRef8 => {
                 let index = self.reader.read_u8().ok_or("Unexpected EOF")? - 1;
-                match self.table_refs.get(usize::try_from(index).unwrap()) {
+                match self.table_refs.get(usize::from(index)) {
                     None => Err("Invalid table reference"),
                     Some(v) => Ok(v.clone()),
                 }
@@ -276,7 +275,7 @@ impl<'s> Deserializer<'s> {
     fn deserialize_f64_from_str(&mut self) -> Result<f64, &'static str> {
         let len = self.reader.read_u8().ok_or("Unexpected EOF")?;
 
-        match self.reader.read_bytes(len.try_into().unwrap()) {
+        match self.reader.read_bytes(len.into()) {
             None => Err("Unexpected EOF"),
             Some(bytes) => std::str::from_utf8(bytes)
                 .ok()
