@@ -1,6 +1,6 @@
 [package]
 name = "weakauras_parser_base64"
-version = "0.1.3"
+version = "0.1.4"
 authors = ["Velithris <13710677+Zireael-N@users.noreply.github.com>", "Wojciech Muła", "Alfred Klomp", "Daniel Lemire"]
 edition = "2021"
 license = "BSD-2-Clause"

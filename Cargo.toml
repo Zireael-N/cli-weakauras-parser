@@ -3,6 +3,7 @@ lto = true
 strip = true
 
 [workspace]
+resolver = "2"
 members = [
     "base64",
     "cli",

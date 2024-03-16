@@ -1,6 +1,6 @@
 [package]
 name = "weakauras_parser_huffman"
-version = "0.1.3"
+version = "0.1.4"
 authors = ["Velithris <13710677+Zireael-N@users.noreply.github.com>", "jjsheets", "Galmok"]
 edition = "2021"
 license = "GPL-2.0"
