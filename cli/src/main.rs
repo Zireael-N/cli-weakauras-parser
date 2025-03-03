@@ -1,6 +1,6 @@
 mod utils;
 
-use clap::{builder::PossibleValuesParser, Arg, ArgMatches, Command};
+use clap::{Arg, ArgMatches, Command, builder::PossibleValuesParser};
 use std::ffi::OsString;
 use weakauras_parser as parser;
 

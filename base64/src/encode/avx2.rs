@@ -20,57 +20,59 @@ pub(crate) unsafe fn encode(s: &[u8], buf: &mut String) {
     let mut ptr = s.as_ptr();
     let mut out_ptr = buf[out_len..].as_mut_ptr();
 
-    let shuf = _mm256_set_epi8(
-        10, 9, 11, 10, 7, 6, 8, 7, 4, 3, 5, 4, 1, 0, 2, 1, 10, 9, 11, 10, 7, 6, 8, 7, 4, 3, 5, 4,
-        1, 0, 2, 1,
-    );
-
-    while len >= 32 {
-        let lo = _mm_loadu_si128(ptr as *const _);
-        let hi = _mm_loadu_si128(ptr.add(12) as *const _);
-
-        let src = _mm256_shuffle_epi8(_mm256_set_m128i(hi, lo), shuf);
-
-        let t1 = _mm256_mullo_epi16(
-            _mm256_and_si256(src, _mm256_set1_epi32(0x003f03f0)),
-            _mm256_set1_epi32(0x01000010),
-        );
-        let t2 = _mm256_mulhi_epu16(
-            _mm256_and_si256(src, _mm256_set1_epi32(0x0fc0fc00)),
-            _mm256_set1_epi32(0x04000040),
+    unsafe {
+        let shuf = _mm256_set_epi8(
+            10, 9, 11, 10, 7, 6, 8, 7, 4, 3, 5, 4, 1, 0, 2, 1, 10, 9, 11, 10, 7, 6, 8, 7, 4, 3, 5,
+            4, 1, 0, 2, 1,
         );
 
-        let indices = _mm256_shuffle_epi8(
-            _mm256_or_si256(t1, t2),
-            _mm256_set_epi8(
-                12, 13, 14, 15, 8, 9, 10, 11, 4, 5, 6, 7, 0, 1, 2, 3, 12, 13, 14, 15, 8, 9, 10, 11,
-                4, 5, 6, 7, 0, 1, 2, 3,
-            ),
-        );
+        while len >= 32 {
+            let lo = _mm_loadu_si128(ptr as *const _);
+            let hi = _mm_loadu_si128(ptr.add(12) as *const _);
 
-        let mut result = _mm256_or_si256(
-            _mm256_subs_epu8(indices, _mm256_set1_epi8(51)),
-            _mm256_and_si256(
-                _mm256_cmpgt_epi8(_mm256_set1_epi8(26), indices),
-                _mm256_set1_epi8(13),
-            ),
-        );
+            let src = _mm256_shuffle_epi8(_mm256_set_m128i(hi, lo), shuf);
 
-        let offsets = _mm256_setr_epi8(
-            39, -4, -4, -4, -4, -4, -4, -4, -4, -4, -4, -22, -22, 97, 0, 0, 39, -4, -4, -4, -4, -4,
-            -4, -4, -4, -4, -4, -22, -22, 97, 0, 0,
-        );
+            let t1 = _mm256_mullo_epi16(
+                _mm256_and_si256(src, _mm256_set1_epi32(0x003f03f0)),
+                _mm256_set1_epi32(0x01000010),
+            );
+            let t2 = _mm256_mulhi_epu16(
+                _mm256_and_si256(src, _mm256_set1_epi32(0x0fc0fc00)),
+                _mm256_set1_epi32(0x04000040),
+            );
 
-        result = _mm256_add_epi8(_mm256_shuffle_epi8(offsets, result), indices);
+            let indices = _mm256_shuffle_epi8(
+                _mm256_or_si256(t1, t2),
+                _mm256_set_epi8(
+                    12, 13, 14, 15, 8, 9, 10, 11, 4, 5, 6, 7, 0, 1, 2, 3, 12, 13, 14, 15, 8, 9, 10,
+                    11, 4, 5, 6, 7, 0, 1, 2, 3,
+                ),
+            );
 
-        _mm256_storeu_si256(out_ptr as *mut _, result);
-        out_ptr = out_ptr.add(32);
-        out_len += 32;
+            let mut result = _mm256_or_si256(
+                _mm256_subs_epu8(indices, _mm256_set1_epi8(51)),
+                _mm256_and_si256(
+                    _mm256_cmpgt_epi8(_mm256_set1_epi8(26), indices),
+                    _mm256_set1_epi8(13),
+                ),
+            );
 
-        len -= 24;
-        ptr = ptr.add(24);
+            let offsets = _mm256_setr_epi8(
+                39, -4, -4, -4, -4, -4, -4, -4, -4, -4, -4, -22, -22, 97, 0, 0, 39, -4, -4, -4, -4,
+                -4, -4, -4, -4, -4, -4, -22, -22, 97, 0, 0,
+            );
+
+            result = _mm256_add_epi8(_mm256_shuffle_epi8(offsets, result), indices);
+
+            _mm256_storeu_si256(out_ptr as *mut _, result);
+            out_ptr = out_ptr.add(32);
+            out_len += 32;
+
+            len -= 24;
+            ptr = ptr.add(24);
+        }
+        buf.as_mut_vec().set_len(out_len);
+
+        scalar::encode(core::slice::from_raw_parts(ptr, len), buf)
     }
-    buf.as_mut_vec().set_len(out_len);
-
-    scalar::encode(core::slice::from_raw_parts(ptr, len), buf)
 }

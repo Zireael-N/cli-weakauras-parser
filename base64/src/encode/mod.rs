@@ -34,7 +34,9 @@ fn calculate_capacity(data: &[u8]) -> Option<usize> {
 #[inline(always)]
 /// SAFETY: the caller must ensure that buf can hold AT LEAST ((s.len() * 4 + 2) / 3) more elements
 unsafe fn encode(data: &[u8], result: &mut String) {
-    sse::encode(data, result);
+    unsafe {
+        sse::encode(data, result);
+    }
 }
 
 #[cfg(any(
@@ -44,7 +46,9 @@ unsafe fn encode(data: &[u8], result: &mut String) {
 #[inline(always)]
 /// SAFETY: the caller must ensure that buf can hold AT LEAST ((s.len() * 4 + 2) / 3) more elements
 unsafe fn encode(data: &[u8], result: &mut String) {
-    scalar::encode(data, result);
+    unsafe {
+        scalar::encode(data, result);
+    }
 }
 
 #[allow(dead_code)]

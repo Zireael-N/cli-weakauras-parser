@@ -1,6 +1,6 @@
 mod reader;
 
-use super::{EmbeddedTypeTag, TypeTag, MINOR};
+use super::{EmbeddedTypeTag, MINOR, TypeTag};
 use crate::{
     macros::check_recursion,
     value::{LuaMapKey, LuaValue, Map},
