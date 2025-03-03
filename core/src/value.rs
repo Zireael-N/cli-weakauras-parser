@@ -57,10 +57,7 @@ impl Hash for LuaValue {
 use std::cmp::Ordering;
 impl PartialOrd for LuaValue {
     // Number > String > Boolean > Map > Null
-    #[cfg_attr(
-        feature = "cargo-clippy",
-        allow(clippy::non_canonical_partial_ord_impl)
-    )]
+    #[allow(clippy::non_canonical_partial_ord_impl)]
     fn partial_cmp(&self, other: &LuaValue) -> Option<Ordering> {
         Some(match (self, other) {
             (LuaValue::Number(n1), LuaValue::Number(n2)) => {

@@ -66,7 +66,7 @@ impl Serializer {
     fn serialize_number(&mut self, value: f64) {
         const MAX_7_BIT: f64 = (2i64.pow(56) - 1) as f64;
 
-        #[cfg_attr(feature = "cargo-clippy", allow(clippy::manual_range_contains))]
+        #[allow(clippy::manual_range_contains)]
         if value.fract() != 0.0 || (value < -MAX_7_BIT || value > MAX_7_BIT) {
             self.result.push(TypeTag::Float.to_u8() << TYPE_TAG_SHIFT);
             self.result.extend_from_slice(&value.to_be_bytes());
