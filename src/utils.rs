@@ -4,16 +4,16 @@ use std::{
     io::{self, BufReader, BufWriter, Read, Write},
 };
 
-pub(crate) fn read_from_file(path: &OsStr) -> Result<String, io::Error> {
+pub(crate) fn read_from_file(path: &OsStr) -> Result<Vec<u8>, io::Error> {
     if path == "-" {
         let stdin = io::stdin();
         let mut stdin = BufReader::new(stdin.lock());
 
-        let mut buf = String::with_capacity(1024);
-        stdin.read_to_string(&mut buf)?;
+        let mut buf = Vec::with_capacity(1024);
+        stdin.read_to_end(&mut buf)?;
         Ok(buf)
     } else {
-        fs::read_to_string(path)
+        fs::read(path)
     }
 }
 

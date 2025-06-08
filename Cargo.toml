@@ -1,12 +1,22 @@
-[profile.release]
-lto = true
-strip = true
+[package]
+name = "cli_weakauras_parser"
+version = "0.1.5"
+authors = ["Velithris"]
+edition = "2024"
+license = "MIT"
 
-[workspace]
-resolver = "2"
-members = [
-    "base64",
-    "cli",
-    "core",
-    "huffman"
-]
+[features]
+default = ["gpl-dependencies"]
+gpl-dependencies = ["weakauras-codec/gpl-dependencies"]
+
+[dependencies]
+clap = "4"
+serde_json = "1"
+
+[dependencies.weakauras-codec]
+version = "0.1.0"
+default-features = false
+features = ["flate2-zlib-ng", "serde", "lua-value-indexmap"]
+
+[target.'cfg(all(target_env = "musl", target_pointer_width = "64"))'.dependencies.jemallocator]
+version = "0.5"

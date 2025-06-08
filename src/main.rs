@@ -1,8 +1,8 @@
 mod utils;
 
 use clap::{Arg, ArgMatches, Command, builder::PossibleValuesParser};
-use std::ffi::OsString;
-use weakauras_parser as parser;
+use std::{ffi::OsString, process::ExitCode};
+use weakauras_codec as parser;
 
 #[cfg(all(target_env = "musl", target_pointer_width = "64"))]
 #[global_allocator]
@@ -63,15 +63,17 @@ fn try_main() -> Result<(), Error> {
 fn encode(matches: &ArgMatches) -> Result<(), Error> {
     let input_file = matches.get_one::<OsString>("INPUT FILE").unwrap();
     let output_file = matches.get_one::<OsString>("OUTPUT FILE");
-    let json_string = utils::read_from_file(input_file)?;
+
+    let json = utils::read_from_file(input_file)?;
+    let json = String::from_utf8(json)?;
 
     let wa_version = match matches.get_one::<String>("VERSION").map(|s| s.as_str()) {
-        Some("1") => parser::StringVersion::Deflate,
-        Some("2") => parser::StringVersion::BinarySerialization,
+        Some("1") => parser::OutputStringVersion::Deflate,
+        Some("2") => parser::OutputStringVersion::BinarySerialization,
         _ => unreachable!(),
     };
 
-    let lua_value = serde_json::from_str(&json_string)?;
+    let lua_value = serde_json::from_str(&json)?;
     let wa_string = parser::encode(&lua_value, wa_version)?;
 
     utils::write_to_file(output_file.map(|s| s.as_os_str()), wa_string.as_bytes())?;
@@ -84,7 +86,7 @@ fn decode(matches: &ArgMatches) -> Result<(), Error> {
     let output_file = matches.get_one::<OsString>("OUTPUT FILE");
     let wa_string = utils::read_from_file(input_file)?;
 
-    let lua_value = parser::decode(&wa_string)?;
+    let lua_value = parser::decode(wa_string.trim_ascii_end(), None)?;
     let json_string = serde_json::to_string_pretty(&lua_value)?;
 
     utils::write_to_file(output_file.map(|s| s.as_os_str()), json_string.as_bytes())?;
@@ -92,9 +94,12 @@ fn decode(matches: &ArgMatches) -> Result<(), Error> {
     Ok(())
 }
 
-fn main() {
-    if let Err(err) = try_main() {
-        eprintln!("Error: {err}");
-        std::process::exit(1);
+fn main() -> ExitCode {
+    match try_main() {
+        Ok(()) => ExitCode::SUCCESS,
+        Err(err) => {
+            eprintln!("Error: {err}");
+            ExitCode::FAILURE
+        }
     }
 }
