@@ -49,7 +49,8 @@ fn try_main() -> Result<(), Error> {
                 .help("Sets the version of a WA-compatible format (1 - the first version that uses FLATE compression, 2 - the first version that uses a binary serialization algorithm instead of AceSerializer)")
                 .value_parser(PossibleValuesParser::new(["1", "2"]))
                 .default_value("1")
-                .long("wa_version")
+                .long("wa-version")
+                .visible_alias("wa_version")
                 .short('v')))
         .get_matches();
 
