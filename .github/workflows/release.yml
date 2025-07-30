@@ -1,30 +1,28 @@
-# Based on https://github.com/BurntSushi/ripgrep/blob/ffd4c9ccba0ffc74270a8d3ae75f11a7ba7a1a64/.github/workflows/release.yml
-
 name: release
+
+permissions:
+  contents: write
+
 on:
   push:
     tags:
     - 'v[0-9]+.[0-9]+.[0-9]+'
+
 jobs:
   create-release:
     name: create-release
     runs-on: ubuntu-latest
-    outputs:
-      upload_url: ${{ steps.release.outputs.upload_url }}
-      version: ${{ env.VERSION }}
     steps:
-      - name: Get the release version from the tag
-        run: |
-          echo "VERSION=${GITHUB_REF#refs/tags/}" | tee -a $GITHUB_ENV
-
       - name: Create a GitHub release
-        id: release
-        uses: actions/create-release@v1
+        shell: bash
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: ${{ env.VERSION }}
-          release_name: ${{ env.VERSION }}
+        run: |
+          gh release create \
+            ${{ github.ref_name }} \
+            --repo ${{ github.event.repository.full_name }} \
+            --verify-tag \
+            --generate-notes
 
   build-release:
     name: build-release
@@ -56,24 +54,16 @@ jobs:
 
     steps:
     - name: Checkout the repository
-      uses: actions/checkout@v2
+      uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
       with:
-        fetch-depth: 1
+        persist-credentials: false
 
     - name: Install Rust
       if: matrix.build != 'linux-musl'
-      uses: actions-rs/toolchain@v1
+      uses: dtolnay/rust-toolchain@b3b07ba8b418998c39fb20f53e8b695cdcc8de1b # v1
       with:
         toolchain: ${{ matrix.rust }}
-        profile: minimal
-        override: true
-        target: ${{ matrix.target }}
-
-    - name: Build a Docker image
-      if: matrix.build == 'linux-musl'
-      shell: bash
-      run: |
-        docker build -t alpine-builder -f .github/workflows/Dockerfile .
+        targets: ${{ matrix.target }}
 
     - name: Build the release binary
       if: matrix.build != 'linux-musl'
@@ -82,6 +72,8 @@ jobs:
     - name: Build the release binary (Docker)
       if: matrix.build == 'linux-musl'
       run: |
+        docker build -t alpine-builder -f .github/workflows/Dockerfile .
+
         CURRENT_USER=$(whoami)
         USER_ID=$(id -u $CURRENT_USER)
         GROUP_ID=$(id -g $CURRENT_USER)
@@ -101,7 +93,7 @@ jobs:
     - name: Build an archive and print its SHA-512
       shell: bash
       run: |
-        OUTPUT_DIR="cli_weakauras_parser-${{ needs.create-release.outputs.version }}-${{ matrix.target }}"
+        OUTPUT_DIR="cli_weakauras_parser-${{ github.ref_name }}-${{ matrix.target }}"
         mkdir -p "$OUTPUT_DIR"
         if [ "${{ matrix.os }}" = "windows-latest" ]; then
           cp "target/${{ matrix.target }}/release/cli_weakauras_parser.exe" "$OUTPUT_DIR/"
@@ -127,11 +119,11 @@ jobs:
         echo "SHA-512 of $ASSET: ${SHA512:-N/A (sha512sum is not installed)}"
 
     - name: Upload the archive
-      uses: actions/upload-release-asset@v1.0.1
+      shell: bash
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ needs.create-release.outputs.upload_url }}
-        asset_path: ${{ env.ASSET }}
-        asset_name: ${{ env.ASSET }}
-        asset_content_type: application/octet-stream
+      run: |
+        gh release upload \
+          ${{ github.ref_name }} \
+          "${{ env.ASSET }}" \
+          --repo ${{ github.event.repository.full_name }}
