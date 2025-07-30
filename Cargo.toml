@@ -1,6 +1,6 @@
 [package]
 name = "cli_weakauras_parser"
-version = "0.1.5"
+version = "0.1.6"
 authors = ["Velithris"]
 edition = "2024"
 license = "MIT"
